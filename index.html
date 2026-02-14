@@ -1,109 +1,221 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<style>
-body {
-    background: transparent;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    display: flex;
-    justify-content: center;
-    margin: 0;
-}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Notion Mini Calendar</title>
+  <style>
+    :root{
+      --header-bg:#3a3a3a;     /* barra gris */
+      --header-fg:#ffffff;
+      --card-bg:#ffffff;       /* fondo blanco */
+      --text:#111111;
+      --muted:#b9b9b9;         /* días fuera del mes */
+      --hover:#f2f2f2;
+      --today-bg:#4a4a4a;      /* selección (hoy) */
+      --today-fg:#ffffff;
+      --shadow: 0 8px 20px rgba(0,0,0,0.12);
+      --radius:16px;
+      --w: 240px;              /* <-- tamaño del widget */
+    }
 
-.calendar {
-    background: #ffffff;
-    border-radius: 16px;
-    width: 260px;
-    overflow: hidden;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-}
+    body{
+      margin:0;
+      background:transparent;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      padding:0;
+    }
 
-/* HEADER */
-.header {
-    background: #3a3a3a; /* Gris oscuro */
-    color: white;
-    padding: 10px 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 14px;
-    font-weight: 600;
-}
+    .calendar{
+      width:var(--w);
+      background:var(--card-bg);
+      border-radius:var(--radius);
+      overflow:hidden;
+      box-shadow:var(--shadow);
+      user-select:none;
+    }
 
-.arrow {
-    font-size: 16px;
-    cursor: pointer;
-    opacity: 0.8;
-}
+    .header{
+      background:var(--header-bg);
+      color:var(--header-fg);
+      padding:10px 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
 
-.arrow:hover {
-    opacity: 1;
-}
+    .month{
+      font-size:14px;
+      font-weight:600;
+      letter-spacing:0.2px;
+      text-align:center;
+      flex:1;
+      white-space:nowrap;
+    }
 
-/* BODY */
-.content {
-    padding: 12px;
-}
+    .btn{
+      width:28px;
+      height:28px;
+      display:grid;
+      place-items:center;
+      border-radius:8px;
+      cursor:pointer;
+      opacity:0.9;
+    }
+    .btn:hover{ background: rgba(255,255,255,0.12); opacity:1; }
 
-.days, .dates {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    text-align: center;
-}
+    .content{ padding:12px; }
 
-.days div {
-    font-size: 10px;
-    font-weight: 600;
-    margin-bottom: 8px;
-}
+    .days, .dates{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align:center;
+      align-items:center;
+    }
 
-.dates div {
-    padding: 6px 0;
-    font-size: 12px;
-    border-radius: 6px;
-    transition: 0.2s;
-}
+    .days div{
+      font-size:10px;
+      font-weight:700;
+      color:#111;
+      margin-bottom:8px;
+    }
 
-.dates div:hover {
-    background: #f0f0f0;
-}
+    .date{
+      font-size:12px;
+      padding:7px 0;
+      border-radius:8px;
+      cursor:pointer;
+      transition: background 0.15s ease;
+      color:var(--text);
+    }
+    .date:hover{ background:var(--hover); }
 
-.selected {
-    background: #4a4a4a; /* gris selección */
-    color: white;
-    font-weight: 600;
-}
-</style>
+    .muted{ color:var(--muted); }
+
+    .today{
+      background:var(--today-bg);
+      color:var(--today-fg);
+      font-weight:700;
+    }
+
+    /* Para que Notion no te deje un “lienzo” gigante */
+    html, body { height: fit-content; }
+  </style>
 </head>
 <body>
-
-<div class="calendar">
+  <div class="calendar" id="cal">
     <div class="header">
-        <div class="arrow">‹</div>
-        <div>December 2026</div>
-        <div class="arrow">›</div>
+      <div class="btn" id="prev" aria-label="Previous month">‹</div>
+      <div class="month" id="label">—</div>
+      <div class="btn" id="next" aria-label="Next month">›</div>
     </div>
-
     <div class="content">
-        <div class="days">
-            <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
-        </div>
-
-        <div class="dates">
-            <div></div><div></div><div></div><div class="selected">1</div>
-            <div>2</div><div>3</div><div>4</div>
-            <div>5</div><div>6</div><div>7</div>
-            <div>8</div><div>9</div><div>10</div><div>11</div>
-            <div>12</div><div>13</div><div>14</div>
-            <div>15</div><div>16</div><div>17</div><div>18</div>
-            <div>19</div><div>20</div><div>21</div>
-            <div>22</div><div>23</div><div>24</div><div>25</div>
-            <div>26</div><div>27</div><div>28</div>
-            <div>29</div><div>30</div><div>31</div>
-        </div>
+      <div class="days" id="days"></div>
+      <div class="dates" id="dates"></div>
     </div>
-</div>
+  </div>
 
+  <script>
+    // Config: semana inicia en domingo como tu ejemplo (S M T W T F S)
+    const WEEKDAYS = ["S","M","T","W","T","F","S"];
+    const MONTHS = [
+      "January","February","March","April","May","June",
+      "July","August","September","October","November","December"
+    ];
+
+    const daysEl = document.getElementById("days");
+    const datesEl = document.getElementById("dates");
+    const labelEl = document.getElementById("label");
+    const prevBtn = document.getElementById("prev");
+    const nextBtn = document.getElementById("next");
+
+    // Pintar encabezado de días
+    WEEKDAYS.forEach(d => {
+      const div = document.createElement("div");
+      div.textContent = d;
+      daysEl.appendChild(div);
+    });
+
+    // Estado del mes visible
+    const today = new Date();
+    let viewYear = today.getFullYear();
+    let viewMonth = today.getMonth(); // 0-11
+
+    function startOfMonth(y,m){ return new Date(y,m,1); }
+    function daysInMonth(y,m){ return new Date(y,m+1,0).getDate(); }
+
+    function render(){
+      // Label
+      labelEl.textContent = `${MONTHS[viewMonth]} ${viewYear}`;
+
+      // Limpiar fechas
+      datesEl.innerHTML = "";
+
+      const first = startOfMonth(viewYear, viewMonth);
+      const firstWeekday = first.getDay(); // 0=Sun
+      const dim = daysInMonth(viewYear, viewMonth);
+
+      // Días del mes anterior para rellenar inicio
+      const prevMonth = (viewMonth === 0) ? 11 : viewMonth - 1;
+      const prevYear = (viewMonth === 0) ? viewYear - 1 : viewYear;
+      const dimPrev = daysInMonth(prevYear, prevMonth);
+
+      // 1) celdas previas (gris)
+      for(let i=0; i<firstWeekday; i++){
+        const dayNum = dimPrev - (firstWeekday - 1 - i);
+        const cell = document.createElement("div");
+        cell.className = "date muted";
+        cell.textContent = dayNum;
+        datesEl.appendChild(cell);
+      }
+
+      // 2) celdas del mes actual
+      for(let d=1; d<=dim; d++){
+        const cell = document.createElement("div");
+        cell.className = "date";
+        cell.textContent = d;
+
+        // marcar HOY si coincide
+        if (viewYear === today.getFullYear() &&
+            viewMonth === today.getMonth() &&
+            d === today.getDate()){
+          cell.classList.add("today");
+        }
+
+        datesEl.appendChild(cell);
+      }
+
+      // 3) completar hasta múltiplo de 7 (gris)
+      const totalCells = datesEl.children.length;
+      const remainder = totalCells % 7;
+      const toAdd = remainder === 0 ? 0 : (7 - remainder);
+
+      for(let i=1; i<=toAdd; i++){
+        const cell = document.createElement("div");
+        cell.className = "date muted";
+        cell.textContent = i;
+        datesEl.appendChild(cell);
+      }
+    }
+
+    prevBtn.addEventListener("click", () => {
+      viewMonth--;
+      if(viewMonth < 0){ viewMonth = 11; viewYear--; }
+      render();
+    });
+
+    nextBtn.addEventListener("click", () => {
+      viewMonth++;
+      if(viewMonth > 11){ viewMonth = 0; viewYear++; }
+      render();
+    });
+
+    // Render inicial
+    render();
+  </script>
 </body>
 </html>
